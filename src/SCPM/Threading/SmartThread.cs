@@ -48,6 +48,8 @@ namespace SCPM.Threading
         static extern bool SwitchToThread();
 
         private readonly int waitSpinLmit = 20;
+        private readonly int waitSpinLmitOne = 21;
+        private readonly int waitSpinLmitTwo = 22;
         private readonly int waitSpinTime = 30;
         
         private readonly Thread thread;
@@ -126,7 +128,10 @@ namespace SCPM.Threading
             waitSpinLmit = Configuration.SmartThreadWaitSpinLimit;
             waitSpinTime = Configuration.SmartThreadWaitSpinTime;
             stealCondition = Configuration.SmartThreadStealCondition;
-            
+
+            waitSpinLmitOne = waitSpinLmit + 1;
+            waitSpinLmitTwo = waitSpinLmit + 2;
+
             wait = new ManualResetEvent(isSignalled);
             scheduler = new NonBlockingHybridQueue<IComputation>();
             id = thread.ManagedThreadId;        
@@ -198,16 +203,16 @@ namespace SCPM.Threading
         {
             waitSpinCount++;
 
-            if (waitSpinCount > waitSpinLmit + 2)
+            if (waitSpinCount > waitSpinLmitTwo)
             {
                 waitSpinCount = 0;
                 wait.WaitOne();
             }
             else if (waitSpinCount == waitSpinLmit)
                 Thread.Sleep(0);
-            else if (waitSpinCount == waitSpinLmit + 1)
+            else if (waitSpinCount == waitSpinLmitOne)
                 Thread.Sleep(1);
-            else if (waitSpinCount > waitSpinLmit + 1)
+            else if (waitSpinCount > waitSpinLmitTwo)
             {
                 wait.WaitOne(waitSpinTime);
             }
@@ -282,7 +287,9 @@ namespace SCPM.Threading
         /// <returns>a value indicationg the sucess or failure of the operation.</returns>
         private bool TryStealFromQueue(IStealingQueue<IComputation> queue, int conditionThreshold)
         {
-            if (!queue.IsEmpty && queue.UnsafeCount >= conditionThreshold)
+            // Try steal as much as possible from the selected thread as the selection
+            // procedure to steal is expensive.
+            while (!queue.IsEmpty && queue.UnsafeCount >= conditionThreshold)
             {
                 IComputation localComputation = queue.DequeueLast();
 
