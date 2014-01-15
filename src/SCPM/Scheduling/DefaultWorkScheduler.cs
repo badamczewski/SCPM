@@ -35,7 +35,6 @@ namespace SCPM.Scheduling
     public class DefaultWorkScheduler : IWorkScheduler
     {
         private static readonly DefaultWorkScheduler scheduler = new DefaultWorkScheduler();
-        private static readonly Type fiberComputation = typeof(FiberComputation<>);
 
         private DefaultWorkScheduler() { }
         static DefaultWorkScheduler() { }

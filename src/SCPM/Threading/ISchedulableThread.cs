@@ -30,6 +30,9 @@ using SCPM.Interfaces;
 
 namespace SCPM.Threading
 {
+    /// <summary>
+    /// Represents a thread that can be schedulled by SCPM scheduller.
+    /// </summary>
     public interface ISchedulableThread : IComparable<ISchedulableThread>
     {
         void Execute(IComputation computation);

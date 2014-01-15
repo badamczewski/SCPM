@@ -61,6 +61,15 @@ namespace SCPM {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to There was an exception while executing the computation.
+        /// </summary>
+        internal static string Computation_Exception {
+            get {
+                return ResourceManager.GetString("Computation_Exception", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fiber.
         /// </summary>
         internal static string Computation_Fiber {

@@ -29,9 +29,14 @@ using System.Text;
 using SCPM.Interfaces;
 using SCPM.Scheduling;
 using System.Threading;
+using SCPM.Exceptions;
 
 namespace SCPM.Threading
 {
+    /// <summary>
+    /// Represents an unit of execution.
+    /// </summary>
+    /// <typeparam name="T">typeparam that represents the state to be used while executing.</typeparam>
     public sealed class Computation<T> : IComputation
     {
         private Action<T> action;
@@ -40,10 +45,17 @@ namespace SCPM.Threading
         private bool isInternalComputation;
         private T state;
 
-        public Computation(Action<T> action)
+        private ComputationCookie cookie;
+
+        public Computation(Action<T> action) : this(action, new ComputationCookie())
+        { }
+
+        public Computation(Action<T> action, ComputationCookie cookie)
         {
             this.action = action;
             this.scheduler = DefaultWorkScheduler.Scheduler;
+
+            this.cookie = cookie;
         }
 
         internal Computation(Action<T> action, T state, bool isInternal) : this(action)
@@ -52,23 +64,47 @@ namespace SCPM.Threading
             this.isInternalComputation = isInternal;
         }
 
+        /// <summary>
+        /// Runs the current computation.
+        /// </summary>
+        /// <param name="state">The state to be passed.</param>
         public void Run(T state)
         {
             this.state = state;
             this.scheduler.Queue(this);
         }
 
+        /// <summary>
+        /// Executes the given computation.
+        /// </summary>
+        /// <returns></returns>
         object IComputation.Execute()
         {
-            action(state);
+            try
+            {
+                action(state);
 
-            //Internal computation doesn't need to set the event.
-            if (!isInternalComputation && wait != null)
-                wait.Set();
+                //Internal computation doesn't need to set the event.
+                if (!isInternalComputation && wait != null)
+                    wait.Set();
 
-            return null;
+                return null;
+            }
+            catch (Exception ex)
+            {
+                cookie.IsException = true;
+                cookie.Exception = ex;
+
+                if (wait != null)
+                    wait.Set();
+
+                return null;
+            }
         }
 
+        /// <summary>
+        /// Bloks the current thread and waits for the computation to finish.
+        /// </summary>
         public void WaitForCompletion()
         {
             if (wait == null)
@@ -76,8 +112,10 @@ namespace SCPM.Threading
 
             wait.WaitOne();
             wait.Close();
-        }
 
+            if (cookie.IsException)
+                throw new ComputationException(Resources.Computation_Exception, cookie.Exception);
+        }
 
         public string ComputationType
         {

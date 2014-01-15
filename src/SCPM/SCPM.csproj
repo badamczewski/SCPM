@@ -60,6 +60,7 @@
     <Compile Include="Collections\IStealingQueue.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="Delegations\Delegates.cs" />
+    <Compile Include="Exceptions\ComputationException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Collections\Heap.cs" />
     <Compile Include="Collections\NonBlockingHybridQueue.cs" />
@@ -75,6 +76,7 @@
     <Compile Include="Scheduling\IWorkScheduler.cs" />
     <Compile Include="Scheduling\SchedulerAction.cs" />
     <Compile Include="Threading\Computation.cs" />
+    <Compile Include="Threading\ComputationCookie.cs" />
     <Compile Include="Threading\FiberComputation.cs" />
     <Compile Include="Threading\FiberPool.cs" />
     <Compile Include="Threading\FiberStatus.cs" />
@@ -107,6 +109,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

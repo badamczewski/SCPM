@@ -29,9 +29,16 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using SCPM.Exceptions;
 
 namespace SCPM.Threading
 {
+    /// <summary>
+    /// Represents a specific unit of execution that it self controls the process
+    /// of halting and switching to other computations of this type and returning againg
+    /// to continue work.
+    /// </summary>
+    /// <typeparam name="T">typeparam that represents the state to be used while executing.</typeparam>
     public sealed class FiberComputation<T> : IComputation
     {
         private Func<T, IEnumerable<FiberStatus>> action;
@@ -42,11 +49,20 @@ namespace SCPM.Threading
         private bool isInternalComputation;
         private T state;
 
+        private ComputationCookie cookie;
+
         public FiberComputation(Func<T, IEnumerable<FiberStatus>> fiberAction)
+            : this(fiberAction, new ComputationCookie())
+        {
+        }
+
+        public FiberComputation(Func<T, IEnumerable<FiberStatus>> fiberAction, ComputationCookie cookie)
         {
             this.action = fiberAction;
             this.scheduler = DefaultWorkScheduler.Scheduler;
             this.fiberContext = action(state).GetEnumerator();
+
+            this.cookie = cookie;
         }
 
         internal FiberComputation(Func<T, IEnumerable<FiberStatus>> action, T state, bool isInternal)
@@ -56,34 +72,58 @@ namespace SCPM.Threading
             this.isInternalComputation = isInternal;
         }
 
+        /// <summary>
+        /// Runs the current computation.
+        /// </summary>
+        /// <param name="state">The state to be passed.</param>
         public void Run(T state)
         {
             this.state = state;
             this.scheduler.Queue(this);
         }
 
+        /// <summary>
+        /// Executes the given computation.
+        /// </summary>
+        /// <returns></returns> 
         object IComputation.Execute()
         {
-            if (fiberContext.MoveNext() == true && status != FiberStatus.Wait)
+            try
             {
-                status = fiberContext.Current;
+                if (fiberContext.MoveNext() == true && status != FiberStatus.Wait)
+                {
+                    status = fiberContext.Current;
+                    return status;
+                }
+                else if (status == FiberStatus.Wait)
+                {
+                    status = FiberStatus.Switch;
+                    return status;
+                }
+                else
+                    status = FiberStatus.Done;
+
+                //Internal computation doesn't need to set the event.
+                if (!isInternalComputation && wait != null)
+                    wait.Set();
+
                 return status;
             }
-            else if (status == FiberStatus.Wait)
+            catch (Exception ex)
             {
-                status = FiberStatus.Switch;
-                return status;
+                cookie.IsException = true;
+                cookie.Exception = ex;
+
+                if (wait != null)
+                    wait.Set();
+
+                return FiberStatus.Done;
             }
-            else
-                status = FiberStatus.Done;
-
-            //Internal computation doesn't need to set the event.
-            if (!isInternalComputation && wait != null)
-                wait.Set();
-
-            return status;
         }
 
+        /// <summary>
+        /// Bloks the current thread and waits for the computation to finish.
+        /// </summary>
         public void WaitForCompletion()
         {
             if (wait == null)
@@ -91,6 +131,9 @@ namespace SCPM.Threading
 
             wait.WaitOne();
             wait.Close();
+
+            if (cookie.IsException)
+                throw new ComputationException(Resources.Computation_Exception, cookie.Exception);
         }
 
         public string ComputationType

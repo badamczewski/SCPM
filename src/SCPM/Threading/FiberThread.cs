@@ -169,18 +169,5 @@ namespace SCPM.Threading
         {
             return this.scheduler.Count - ((FiberThread)other).scheduler.Count;
         }
-
-
-        public int WorkCount
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
     }
 }

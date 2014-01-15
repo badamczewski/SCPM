@@ -66,8 +66,14 @@ namespace SCPM.Threading
         private bool isInitializedInPool;
         private int waitSpinCount = 0;
         
-
-        public int SchedulableIndex { get; set; }
+        /// <summary>
+        /// Gets the index in the scheduller. 
+        /// This data is exposed for custom schedullers.
+        /// </summary>
+        public int SchedulableIndex 
+        { 
+            get; set;
+        }
 
         /// <summary>
         /// Gets the ManagedThread Id.
