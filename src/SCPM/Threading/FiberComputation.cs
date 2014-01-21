@@ -49,7 +49,7 @@ namespace SCPM.Threading
         private bool isInternalComputation;
         private T state;
 
-        private ComputationCookie cookie;
+        public ComputationCookie Cookie { get; private set; }
 
         public FiberComputation(Func<T, IEnumerable<FiberStatus>> fiberAction)
             : this(fiberAction, new ComputationCookie())
@@ -62,7 +62,7 @@ namespace SCPM.Threading
             this.scheduler = DefaultWorkScheduler.Scheduler;
             this.fiberContext = action(state).GetEnumerator();
 
-            this.cookie = cookie;
+            this.Cookie = cookie;
         }
 
         internal FiberComputation(Func<T, IEnumerable<FiberStatus>> action, T state, bool isInternal)
@@ -101,18 +101,21 @@ namespace SCPM.Threading
                     return status;
                 }
                 else
+                {
                     status = FiberStatus.Done;
+                    Cookie.Completed = true;
 
-                //Internal computation doesn't need to set the event.
-                if (!isInternalComputation && wait != null)
-                    wait.Set();
+                    //Internal computation doesn't need to set the event.
+                    if (!isInternalComputation && wait != null)
+                        wait.Set();
+                }
 
                 return status;
             }
             catch (Exception ex)
             {
-                cookie.IsException = true;
-                cookie.Exception = ex;
+                Cookie.IsException = true;
+                Cookie.Exception = ex;
 
                 if (wait != null)
                     wait.Set();
@@ -129,11 +132,11 @@ namespace SCPM.Threading
             if (wait == null)
                 wait = new ManualResetEvent(false);
 
-            wait.WaitOne();
+            Cookie.WasWaitingForCompletion = wait.WaitOne();
             wait.Close();
 
-            if (cookie.IsException)
-                throw new ComputationException(Resources.Computation_Exception, cookie.Exception);
+            if (Cookie.IsException)
+                throw new ComputationException(Resources.Computation_Exception, Cookie.Exception);
         }
 
         public string ComputationType

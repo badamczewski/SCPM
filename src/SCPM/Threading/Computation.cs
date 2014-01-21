@@ -45,7 +45,7 @@ namespace SCPM.Threading
         private bool isInternalComputation;
         private T state;
 
-        private ComputationCookie cookie;
+        public ComputationCookie Cookie { get; private set; }
 
         public Computation(Action<T> action) : this(action, new ComputationCookie())
         { }
@@ -55,7 +55,7 @@ namespace SCPM.Threading
             this.action = action;
             this.scheduler = DefaultWorkScheduler.Scheduler;
 
-            this.cookie = cookie;
+            this.Cookie = cookie;
         }
 
         internal Computation(Action<T> action, T state, bool isInternal) : this(action)
@@ -84,6 +84,8 @@ namespace SCPM.Threading
             {
                 action(state);
 
+                Cookie.Completed = true;
+
                 //Internal computation doesn't need to set the event.
                 if (!isInternalComputation && wait != null)
                     wait.Set();
@@ -92,8 +94,8 @@ namespace SCPM.Threading
             }
             catch (Exception ex)
             {
-                cookie.IsException = true;
-                cookie.Exception = ex;
+                Cookie.IsException = true;
+                Cookie.Exception = ex;
 
                 if (wait != null)
                     wait.Set();
@@ -110,11 +112,11 @@ namespace SCPM.Threading
             if (wait == null)
                 wait = new ManualResetEvent(false);
 
-            wait.WaitOne();
+            Cookie.WasWaitingForCompletion = wait.WaitOne();
             wait.Close();
 
-            if (cookie.IsException)
-                throw new ComputationException(Resources.Computation_Exception, cookie.Exception);
+            if (Cookie.IsException)
+                throw new ComputationException(Resources.Computation_Exception, Cookie.Exception);
         }
 
         public string ComputationType

@@ -33,8 +33,6 @@ using System.Linq;
 
 namespace SCPM.Tests
 {
-    
-    
     /// <summary>
     ///This is a test class for SmartThreadPoolTest and is intended
     ///to contain all SmartThreadPoolTest Unit Tests
@@ -42,64 +40,13 @@ namespace SCPM.Tests
     [TestClass()]
     public class SmartThreadPoolTest
     {
-
-
-        private TestContext testContextInstance;
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
-
-        #region Additional test attributes
-        // 
-        //You can use the following additional attributes as you write your tests:
-        //
-        //Use ClassInitialize to run code before running the first test in the class
-        //[ClassInitialize()]
-        //public static void MyClassInitialize(TestContext testContext)
-        //{
-        //}
-        //
-        //Use ClassCleanup to run code after all tests in a class have run
-        //[ClassCleanup()]
-        //public static void MyClassCleanup()
-        //{
-        //}
-        //
-        //Use TestInitialize to run code before running each test
-        //[TestInitialize()]
-        //public void MyTestInitialize()
-        //{
-        //}
-        //
-        //Use TestCleanup to run code after each test has run
-        //[TestCleanup()]
-        //public void MyTestCleanup()
-        //{
-        //}
-        //
-        #endregion
-
-
         [TestMethod()]
-        public void QueueWorkItemCorrectnessTest()
+        public void SmartThreadPoolShouldBeCorrect()
         {
             var time = DoTestsSmart();
             Console.WriteLine(time);
 
-            Assert.AreEqual(cntH + cntL, MAX);
+            Assert.AreEqual(cntH + cntM + cntL, MAX);
 
             int count = final.Count(x => x <= 0);
 
@@ -107,15 +54,20 @@ namespace SCPM.Tests
         }
 
         private static ManualResetEvent ev = new ManualResetEvent(false);
-        private static int MAX = 800;
-        private static int CountFast1 = 50000;
-        private static int CountFast2 = 900000;
+
+        private static int MAX = 1245;
+        private static int CountFast1 = 51100;
+        private static int CountFast2 = 912400;
+        private static int CountFast3 = 214010;
         private static List<int> taskList = new List<int>();
         private static int[] final = new int[MAX];
+        private static readonly object locker = new object();
 
 
         private static int cntH = 0;
         private static int cntL = 0;
+        private static int cntM = 0;
+
 
         private static long DoTestsSmart()
         {
@@ -123,16 +75,25 @@ namespace SCPM.Tests
 
             cntH = 0;
             cntL = 0;
+            cntM = 0;
 
             Console.WriteLine("SmartThreadPool GO:");
+
+            Random r = new Random();
+            int rand = r.Next(0, 10);
 
             Stopwatch w = new Stopwatch();
             w.Start();
 
             for (int i = 0; i < MAX; i++)
             {
-                if (i % 5 == 0)
+                if (i % 9 == 0)
+                    rand = r.Next(0, 29);
+
+                if (i % 5 + rand == 0)
                     SmartThreadPool.QueueWorkItem(new Action<object>(ComputeSlow), i);
+                else if (i % 3 + rand == 0)
+                    SmartThreadPool.QueueWorkItem(new Action<object>(ComputeMid), i);
                 else
                     SmartThreadPool.QueueWorkItem(new Action<object>(ComputeFast), i);
             }
@@ -142,6 +103,8 @@ namespace SCPM.Tests
             w.Stop();
             Console.WriteLine("SmartThreadPool: " + w.ElapsedMilliseconds);
             ev.Reset();
+
+            Thread.Sleep(5000);
 
             foreach (var item in taskList)
             {
@@ -169,12 +132,17 @@ namespace SCPM.Tests
             }
 
             Interlocked.Increment(ref cntL);
-            taskList.Add((int)o);
 
-            if (cntL + cntH >= MAX)
+            lock (locker)
+            {
+                taskList.Add((int)o);
+            }
+
+            if (cntH + cntL + cntM >= MAX)
             {
                 Thread.Sleep(100);
                 Console.WriteLine(cntL);
+                Console.WriteLine(cntM);
                 Console.WriteLine(cntH);
                 ev.Set();
             }
@@ -192,12 +160,46 @@ namespace SCPM.Tests
             }
 
             Interlocked.Increment(ref cntH);
-            taskList.Add((int)o);
 
-            if (cntH + cntL >= MAX)
+            lock (locker)
+            {
+                taskList.Add((int)o);
+            }
+
+
+            if (cntH + cntL + cntM >= MAX)
             {
                 Thread.Sleep(100);
                 Console.WriteLine(cntL);
+                Console.WriteLine(cntM);
+                Console.WriteLine(cntH);
+                ev.Set();
+            }
+        }
+
+        private static void ComputeMid(object o)
+        {
+            string s = string.Empty;
+            List<int> l = new List<int>();
+
+            for (int i = 0; i < CountFast3 + (int)o; i++)
+            {
+                l.Add(i);
+                s = l[i != 0 ? i - 1 : i] + i.ToString();
+            }
+
+            Interlocked.Increment(ref cntM);
+
+            lock (locker)
+            {
+                taskList.Add((int)o);
+            }
+
+            if (cntH + cntL + cntM >= MAX)
+            {
+                Thread.Sleep(100);
+                Console.WriteLine(cntL);
+                Console.WriteLine(cntM);
                 Console.WriteLine(cntH);
                 ev.Set();
             }

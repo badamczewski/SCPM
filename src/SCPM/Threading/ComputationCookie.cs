@@ -47,5 +47,16 @@ namespace SCPM.Threading
         /// Gets the exception.
         /// </summary>
         public Exception Exception { get; internal set; }
+
+        /// <summary>
+        /// Gets the information that idicates if the computation is completed.
+        /// </summary>
+        public bool Completed { get; internal set; }
+
+        /// <summary>
+        /// Gets the information that idicates if the the issuer was waiting on
+        /// computation completion.
+        /// </summary>
+        public bool WasWaitingForCompletion { get; internal set; }
     }
 }
