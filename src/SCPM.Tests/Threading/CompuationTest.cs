@@ -83,6 +83,19 @@ namespace SCPM.Tests.Threading
             }
         }
 
+        [TestMethod]
+        public void ComputationShouldWaitOnCompletionWhileCreatatedFromStatic()
+        {
+            var computation = Computation.Create<int>(((x) => { Console.WriteLine(++x); }));
+
+            int state = 0;
+            computation.Run(state);
+            computation.WaitForCompletion();
+
+            Assert.IsTrue(computation.Cookie.WasWaitingForCompletion);
+            Assert.IsTrue(computation.Cookie.Completed);
+        }
+
 
     }
 }

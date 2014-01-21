@@ -33,6 +33,10 @@ using System.Threading;
 
 namespace SCPM
 {
+    /// <summary>
+    /// This is the public global configuration class that
+    /// all of the internals can be configured.
+    /// </summary>
     public static class Configuration
     {
         static Configuration()

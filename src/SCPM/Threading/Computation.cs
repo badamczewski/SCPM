@@ -25,103 +25,26 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using SCPM.Interfaces;
 using SCPM.Scheduling;
-using System.Threading;
-using SCPM.Exceptions;
 
 namespace SCPM.Threading
 {
     /// <summary>
-    /// Represents an unit of execution.
+    /// General purpose computation that can staticly create computations.
     /// </summary>
-    /// <typeparam name="T">typeparam that represents the state to be used while executing.</typeparam>
-    public sealed class Computation<T> : IComputation
+    public class Computation
     {
-        private Action<T> action;
-        private IWorkScheduler scheduler;
-        private ManualResetEvent wait;
-        private bool isInternalComputation;
-        private T state;
-
-        public ComputationCookie Cookie { get; private set; }
-
-        public Computation(Action<T> action) : this(action, new ComputationCookie())
-        { }
-
-        public Computation(Action<T> action, ComputationCookie cookie)
+        public static Computation<T> Create<T>(Action<T> action)
         {
-            this.action = action;
-            this.scheduler = DefaultWorkScheduler.Scheduler;
-
-            this.Cookie = cookie;
+            return new Computation<T>(action);
         }
 
-        internal Computation(Action<T> action, T state, bool isInternal) : this(action)
+        public static FiberComputation<T> Create<T>(Func<T, IEnumerable<FiberStatus>> action)
         {
-            this.state = state;
-            this.isInternalComputation = isInternal;
-        }
-
-        /// <summary>
-        /// Runs the current computation.
-        /// </summary>
-        /// <param name="state">The state to be passed.</param>
-        public void Run(T state)
-        {
-            this.state = state;
-            this.scheduler.Queue(this);
-        }
-
-        /// <summary>
-        /// Executes the given computation.
-        /// </summary>
-        /// <returns></returns>
-        object IComputation.Execute()
-        {
-            try
-            {
-                action(state);
-
-                Cookie.Completed = true;
-
-                //Internal computation doesn't need to set the event.
-                if (!isInternalComputation && wait != null)
-                    wait.Set();
-
-                return null;
-            }
-            catch (Exception ex)
-            {
-                Cookie.IsException = true;
-                Cookie.Exception = ex;
-
-                if (wait != null)
-                    wait.Set();
-
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Bloks the current thread and waits for the computation to finish.
-        /// </summary>
-        public void WaitForCompletion()
-        {
-            if (wait == null)
-                wait = new ManualResetEvent(false);
-
-            Cookie.WasWaitingForCompletion = wait.WaitOne();
-            wait.Close();
-
-            if (Cookie.IsException)
-                throw new ComputationException(Resources.Computation_Exception, Cookie.Exception);
-        }
-
-        public string ComputationType
-        {
-            get { return Resources.Computation_Generic; }
+            return new FiberComputation<T>(action);
         }
     }
 }
