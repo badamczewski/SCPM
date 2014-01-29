@@ -69,11 +69,13 @@ namespace SCPM.Threading
         /// <summary>
         /// Gets the index in the scheduller. 
         /// This data is exposed for custom schedullers.
+        /// 
+        /// The main reason why this is a field an not a property if the fact that
+        /// this field is used all the time thus we absolutley need to make it as
+        /// fast as possible, and method acces throught CallVirt can be slow especially
+        /// when we pile up lit's and lot's of such calls which will be the case here.
         /// </summary>
-        public int SchedulableIndex 
-        { 
-            get; set;
-        }
+        public int schedulableIndex;
 
         /// <summary>
         /// Gets the ManagedThread Id.
