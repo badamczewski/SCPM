@@ -39,7 +39,9 @@ namespace SCPM.Scheduling
         private const string name = "DefaultScheduler"; 
         private List<ISchedulableThread> threadScheduler;
         private readonly object locker = new object();
-        private bool isBuilding = false;
+        private int isBuilding = False;
+        private const int False = 0;
+        private const int True = 0;
 
         static DefaultThreadScheduler() {}
         private DefaultThreadScheduler() {}
@@ -88,14 +90,15 @@ namespace SCPM.Scheduling
 
         public void Reschedule(ISchedulableThread owner, SchedulerAction action)
         {
-            if (isBuilding == false)
+            if (isBuilding == False)
             {
                 //We need this lock as our underlying implementation
                 //is not thread safe atm, in the future TODO: this will change
                 //as we will move to other DS or use fine grained locks.
-                if (Monitor.TryEnter(locker))
+                int local = isBuilding;
+                if(Interlocked.CompareExchange(ref isBuilding, 1, local) == 0)
                 {
-                    isBuilding = true;
+                    isBuilding = True;
                     var copy = threadScheduler[owner.SchedulableIndex];
 
                     if (action == SchedulerAction.Enqueue || action == SchedulerAction.Steal)
@@ -133,11 +136,8 @@ namespace SCPM.Scheduling
                         }
                     }
 
-                    Monitor.Exit(locker);
-
-                }
-
-                isBuilding = false;
+                    isBuilding = False;
+                }      
             }
         }
 

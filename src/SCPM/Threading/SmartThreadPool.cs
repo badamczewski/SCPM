@@ -31,10 +31,11 @@ using SCPM.Threading;
 using SCPM.Collections;
 using SCPM.Interfaces;
 using SCPM.Scheduling;
+using SCPM.Common;
 
 namespace SCPM.Threading
 {
-    /// <summary>
+   /// <summary>
     /// Thread pool that incorprates fair thread scheduling as well as work stealing.
     /// </summary>
     public static class SmartThreadPool
@@ -59,8 +60,10 @@ namespace SCPM.Threading
             //thus heap sort is more efficient.
             artificialThreadScheduler = Configuration.ArtificialThreadScheduler;
 
+            uint physicalProcessors = Unsafe.GetPhysicalCores();
+
             //the idea here is {core_count} * 2 the rest should be spawned as fibers.
-            ISchedulableThread[] threads = new ISchedulableThread[Environment.ProcessorCount];
+            ISchedulableThread[] threads = new ISchedulableThread[physicalProcessors * 2];
 
             for (int i = 0; i < threads.Length; i++)
             {
@@ -70,7 +73,7 @@ namespace SCPM.Threading
 
             //Load the default thread scheduler.
             threadScheduler = Configuration.SmartPoolScheduler;
- 
+
             threadScheduler.Create(threads);
         }
 
@@ -119,7 +122,7 @@ namespace SCPM.Threading
             if (threadPoolThread)
                 return threadScheduler.GetWorstThread();
 
-            return artificialThreadScheduler.GetWorstThread();;
+            return artificialThreadScheduler.GetWorstThread(); ;
         }
 
         /// <summary>

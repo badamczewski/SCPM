@@ -54,10 +54,12 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Data" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\IStealingQueue.cs" />
+    <Compile Include="Common\Unsafe.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="Delegations\Delegates.cs" />
     <Compile Include="Exceptions\ComputationException.cs" />

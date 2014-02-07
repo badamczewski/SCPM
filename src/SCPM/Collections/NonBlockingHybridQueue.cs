@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Collections;
+using System.Runtime.InteropServices;
 
 namespace SCPM.Collections
 {
@@ -45,6 +46,7 @@ namespace SCPM.Collections
         /// <summary>
         /// Internal node class for the use of internal double linked list structure.
         /// </summary>
+        [StructLayoutAttribute(LayoutKind.Sequential)]
         private class Node
         {
             public T val;

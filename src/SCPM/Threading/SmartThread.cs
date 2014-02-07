@@ -51,7 +51,7 @@ namespace SCPM.Threading
         private readonly int waitSpinLmitOne = 21;
         private readonly int waitSpinLmitTwo = 22;
         private readonly int waitSpinTime = 30;
-        
+
         private readonly Thread thread;
         internal readonly NonBlockingHybridQueue<IComputation> scheduler;
         private readonly ManualResetEvent wait;
@@ -61,11 +61,12 @@ namespace SCPM.Threading
         private bool isPendingJoin;
         private int id;
         private int executionCount;
+        private int stealCount;
         private int queueCount;
         private long totalTime;
         private bool isInitializedInPool;
         private int waitSpinCount = 0;
-        
+
         /// <summary>
         /// Gets the index in the scheduller. 
         /// This data is exposed for custom schedullers.
@@ -87,6 +88,22 @@ namespace SCPM.Threading
         {
             get;
             private set;
+        }
+
+        /// <summary>
+        /// Gets the steal count.
+        /// </summary>
+        public decimal StealCount
+        {
+            get { return stealCount; }
+        }
+
+        /// <summary>
+        /// Gets the execution count.
+        /// </summary>
+        public int ExecutionCount
+        {
+            get { return executionCount; }
         }
 
         /// <summary>
@@ -137,7 +154,7 @@ namespace SCPM.Threading
 
             wait = new ManualResetEvent(isSignalled);
             scheduler = new NonBlockingHybridQueue<IComputation>();
-            id = thread.ManagedThreadId;        
+            id = thread.ManagedThreadId;
         }
 
         /// <summary>
@@ -152,7 +169,7 @@ namespace SCPM.Threading
         private void Process()
         {
             IComputation localComputation = null;
-        
+
             while (true)
             {
                 //check if our thread is in the signalled state,
@@ -165,6 +182,12 @@ namespace SCPM.Threading
                 if (scheduler.IsEmpty == false)
                 {
                     localComputation = scheduler.Dequeue();
+
+                    if (localComputation != null)
+                    {
+                        InvokeAction(localComputation);
+                        SmartThreadPool.Reschedule(isInitializedInPool, this, SchedulerAction.Dequeue);
+                    }
                 }
                 else
                 {
@@ -181,17 +204,8 @@ namespace SCPM.Threading
 
                     SpinWait();
                 }
-
-                if (localComputation != null)
-                {
-                    InvokeAction(localComputation);
-                    localComputation = null;
-
-                    //update the stats.
-                    SmartThreadPool.Reschedule(isInitializedInPool, this, SchedulerAction.Dequeue);
-                }
             }
-    
+
             //end processing.
             IsStarted = false;
             wait.Close();
@@ -298,7 +312,9 @@ namespace SCPM.Threading
 
                 if (localComputation != null)
                 {
-                    localComputation.Execute();
+                    stealCount++;
+                    InvokeAction(localComputation);
+
                     return true;
                 }
                 else
