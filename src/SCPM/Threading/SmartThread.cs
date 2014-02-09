@@ -31,6 +31,7 @@ using System.Threading;
 using SCPM.Collections;
 using SCPM.Interfaces;
 using SCPM.Scheduling;
+using SCPM.Common;
 
 namespace SCPM.Threading
 {
@@ -54,6 +55,7 @@ namespace SCPM.Threading
 
         private readonly Thread thread;
         internal readonly NonBlockingHybridQueue<IComputation> scheduler;
+        //internal readonly Deque<IComputation> scheduler;
         private readonly ManualResetEvent wait;
         private readonly int stealCondition = 2;
 
@@ -66,6 +68,7 @@ namespace SCPM.Threading
         private long totalTime;
         private bool isInitializedInPool;
         private int waitSpinCount = 0;
+        private int cpuId = -1;
 
         /// <summary>
         /// Gets the index in the scheduller. 
@@ -138,9 +141,10 @@ namespace SCPM.Threading
         /// indicating that this insance is started in a threadpool.
         /// </summary>
         /// <param name="isInitializedInPool">Indicates that this instance will live in a threadpool.</param>
-        internal SmartThread(bool isInitializedInPool)
+        internal SmartThread(bool isInitializedInPool, int cpuId)
         {
             this.isInitializedInPool = isInitializedInPool;
+            this.cpuId = cpuId;
             thread = new Thread(new ThreadStart(Process));
             thread.IsBackground = true;
             thread.Priority = Configuration.SmartThreadDefaultPrority;
@@ -153,6 +157,7 @@ namespace SCPM.Threading
             waitSpinLmitTwo = waitSpinLmit + 2;
 
             wait = new ManualResetEvent(isSignalled);
+            //scheduler = new Deque<IComputation>();
             scheduler = new NonBlockingHybridQueue<IComputation>();
             id = thread.ManagedThreadId;
         }
@@ -161,7 +166,14 @@ namespace SCPM.Threading
         /// Initializes the SmartThread, in the non thread pool scope, therefor
         /// this thread will not steal work.
         /// </summary>
-        public SmartThread() : this(false) { }
+        public SmartThread() : this(false, -1) { }
+
+        /// <summary>
+        /// Initializes the SmartThread, in the non thread pool scope, therefor
+        /// this thread will not steal work.
+        /// </summary>
+        /// <param name="cpuId">The id of the CPU to schedule thread.</param>
+        public SmartThread(int cpuId) : this(false, cpuId) { }
 
         /// <summary>
         /// The thread Processing loop, that consumes up the queue. 
@@ -169,6 +181,11 @@ namespace SCPM.Threading
         private void Process()
         {
             IComputation localComputation = null;
+
+            if (cpuId != -1)
+            {
+                Unsafe.SetThreadAffinityMask(Unsafe.GetCurrentThread(), new IntPtr(1 << (int)cpuId));
+            }
 
             while (true)
             {
@@ -205,7 +222,6 @@ namespace SCPM.Threading
                     SpinWait();
                 }
             }
-
             //end processing.
             IsStarted = false;
             wait.Close();

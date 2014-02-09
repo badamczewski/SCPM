@@ -67,7 +67,7 @@ namespace SCPM.Threading
 
             for (int i = 0; i < threads.Length; i++)
             {
-                threads[i] = new SmartThread(true);
+                threads[i] = new SmartThread(true, -1);
                 threads[i].SchedulableIndex = i;
             }
 

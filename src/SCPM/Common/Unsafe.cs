@@ -28,11 +28,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Management;
+using System.Runtime.InteropServices;
 
 namespace SCPM.Common
 {
     public class Unsafe
     {
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+        public static extern int GetCurrentProcessorNumber();
+
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr GetCurrentThread();
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr SetThreadAffinityMask(IntPtr hThread, IntPtr dwThreadAffinityMask);
+
+
         /// <summary>
         /// Gets the physcial cores and should this fail returns the Environment.ProcessorCount
         /// that can also include logical cores.
