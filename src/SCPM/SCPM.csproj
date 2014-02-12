@@ -80,6 +80,7 @@
     <Compile Include="Scheduling\IWorkScheduler.cs" />
     <Compile Include="Scheduling\SchedulerAction.cs" />
     <Compile Include="Threading\Computation.cs" />
+    <Compile Include="Threading\ComputationExecutionType.cs" />
     <Compile Include="Threading\GenericComputation.cs" />
     <Compile Include="Threading\ComputationCookie.cs" />
     <Compile Include="Threading\FiberComputation.cs" />

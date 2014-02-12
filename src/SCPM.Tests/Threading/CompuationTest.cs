@@ -96,6 +96,21 @@ namespace SCPM.Tests.Threading
             Assert.IsTrue(computation.Cookie.Completed);
         }
 
+        [TestMethod]
+        public void ComputationThatIsLongRunningShouldRun()
+        {
+            Computation<int> computation = new Computation<int>((x) => { Thread.Sleep(100); Console.WriteLine(x); }, ComputationExecutionType.LongRunning);
+            int state = 0;
+            computation.Run(state);
+
+            Assert.IsFalse(computation.Cookie.WasWaitingForCompletion);
+            Assert.IsFalse(computation.Cookie.Completed);
+
+            Thread.Sleep(200);
+
+            Assert.IsTrue(computation.Cookie.Completed);
+        }
+
 
     }
 }

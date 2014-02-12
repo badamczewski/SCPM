@@ -40,13 +40,32 @@ namespace SCPM.Threading
     public sealed class Computation<T> : IComputation
     {
         private Action<T> action;
+        private ComputationExecutionType computationExecutionType;
         private IWorkScheduler scheduler;
         private ManualResetEvent wait;
         private bool isInternalComputation;
         private T state;
 
-        public Computation(Action<T> action) : this(action, new ComputationCookie())
+        public Computation(Action<T> action)
+            : this(action, new ComputationCookie())
         { }
+
+        public Computation(Action<T> action, ComputationExecutionType executionType, ComputationCookie cookie)
+            : this(action, cookie)
+        { }
+
+        public Computation(Action<T> action, ComputationExecutionType executionType)
+            : this(action, new ComputationCookie())
+        {
+            this.computationExecutionType = executionType;
+        }
+
+        internal Computation(Action<T> action, T state, bool isInternal)
+            : this(action, new ComputationCookie())
+        {
+            this.state = state;
+            this.isInternalComputation = isInternal;
+        }
 
         public Computation(Action<T> action, ComputationCookie cookie)
         {
@@ -54,12 +73,6 @@ namespace SCPM.Threading
             this.scheduler = DefaultWorkScheduler.Scheduler;
 
             this.Cookie = cookie;
-        }
-
-        internal Computation(Action<T> action, T state, bool isInternal) : this(action)
-        {
-            this.state = state;
-            this.isInternalComputation = isInternal;
         }
 
         /// <summary>
@@ -123,5 +136,6 @@ namespace SCPM.Threading
         }
 
         public ComputationCookie Cookie { get; private set; }
+        public ComputationExecutionType ExecutionType { get { return computationExecutionType; } }
     }
 }

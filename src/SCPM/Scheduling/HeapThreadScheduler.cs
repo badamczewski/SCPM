@@ -42,7 +42,7 @@ namespace SCPM.Scheduling
         private readonly object locker = new object();
 
         static HeapThreadScheduler() { }
-        private HeapThreadScheduler() { }
+        private HeapThreadScheduler() { threadScheduler = new Heap(new ISchedulableThread[] { }); }
 
         public static HeapThreadScheduler Create()
         {

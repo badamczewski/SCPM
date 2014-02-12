@@ -42,6 +42,7 @@ namespace SCPM.Threading
     public sealed class FiberComputation<T> : IComputation
     {
         private Func<T, IEnumerable<FiberStatus>> action;
+        private ComputationExecutionType computationExecutionType;
         private IEnumerator<FiberStatus> fiberContext;
         private IWorkScheduler scheduler;
         private ManualResetEvent wait;
@@ -50,6 +51,7 @@ namespace SCPM.Threading
         private T state;
 
         public ComputationCookie Cookie { get; private set; }
+        public ComputationExecutionType ExecutionType { get { return computationExecutionType; } }
 
         public FiberComputation(Func<T, IEnumerable<FiberStatus>> fiberAction)
             : this(fiberAction, new ComputationCookie())
@@ -66,10 +68,12 @@ namespace SCPM.Threading
         }
 
         internal FiberComputation(Func<T, IEnumerable<FiberStatus>> action, T state, bool isInternal)
-            : this(action)
+            : this(action, new ComputationCookie())
         {
             this.state = state;
             this.isInternalComputation = isInternal;
+            //No long running fibers for now.
+            this.computationExecutionType = ComputationExecutionType.Standard;
         }
 
         /// <summary>

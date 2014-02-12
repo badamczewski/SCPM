@@ -35,5 +35,6 @@ namespace SCPM.Interfaces
     {
         object Execute();
         string ComputationType { get; }
+        ComputationExecutionType ExecutionType { get; }
     }
 }

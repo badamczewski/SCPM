@@ -23,42 +23,16 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
 
-
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-using SCPM.Interfaces;
-using SCPM.Threading;
 
-namespace SCPM.Scheduling
+namespace SCPM.Threading
 {
-    public class DefaultWorkScheduler : IWorkScheduler
+    public enum ComputationExecutionType : byte
     {
-        private static readonly DefaultWorkScheduler scheduler = new DefaultWorkScheduler();
-
-        private DefaultWorkScheduler() { }
-        static DefaultWorkScheduler() { }
-
-        public void Queue(IComputation computation)
-        {
-            if (computation.ComputationType == Resources.Computation_Fiber)
-                FiberPool.QueueWorkItem(computation);
-            else
-            {
-                if (computation.ExecutionType == ComputationExecutionType.LongRunning)
-                {
-                    SmartThread thread = new SmartThread(false, -1);
-                    thread.Execute(computation);
-                    thread.Start();
-                }
-
-                SmartThreadPool.QueueWorkItem(computation);
-            }
-        }
-
-        public static DefaultWorkScheduler Scheduler
-        {
-            get { return scheduler; }
-        }
+        Standard = 0,
+        LongRunning = 1
     }
 }
