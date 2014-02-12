@@ -23,7 +23,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
 
-
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -37,7 +36,7 @@ namespace SCPM.Collections
     /// Represents a hybrid queue, that uses non blocking (spining) techniques to achive thread safety.
     /// </summary>
     /// <remarks>
-    /// The queue is hybrid due it's functionality that it can dequeue second last node, which makes it
+    /// The queue is hybrid due it's functionality that it can dequeue last node, which makes it
     /// perfect for certain set of alghoritms, like work stealing. 
     /// </remarks>
     /// <typeparam name="T">generic Typeparam.</typeparam>
@@ -260,7 +259,6 @@ namespace SCPM.Collections
             Node localTail;
             Node localPrev;
             Node swapNode = new Node();
-
             do
             {
                 //get the tail.
@@ -282,6 +280,7 @@ namespace SCPM.Collections
                 swapNode.prev = localPrev.prev;
                 swapNode.val = localPrev.val;
                 swapNode.id = localPrev.id;
+
             }
             // In order for this to be actualy *thread safe* we need to subscribe ourselfs
             // to the same logic as the enque and create a blockade by setting the next value

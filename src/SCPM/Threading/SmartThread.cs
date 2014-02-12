@@ -54,8 +54,8 @@ namespace SCPM.Threading
         private readonly int waitSpinTime = 30;
 
         private readonly Thread thread;
-        internal readonly NonBlockingHybridQueue<IComputation> scheduler;
-        //internal readonly Deque<IComputation> scheduler;
+       
+        internal readonly IStealingQueue<IComputation> scheduler;
         private readonly ManualResetEvent wait;
         private readonly int stealCondition = 2;
 
@@ -157,8 +157,7 @@ namespace SCPM.Threading
             waitSpinLmitTwo = waitSpinLmit + 2;
 
             wait = new ManualResetEvent(isSignalled);
-            //scheduler = new Deque<IComputation>();
-            scheduler = new NonBlockingHybridQueue<IComputation>();
+            scheduler = new LockFreeDequeue<IComputation>();
             id = thread.ManagedThreadId;
         }
 

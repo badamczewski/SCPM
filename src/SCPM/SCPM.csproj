@@ -47,6 +47,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -59,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\IStealingQueue.cs" />
+    <Compile Include="Collections\LockFreeArrayDequeue.cs" />
     <Compile Include="Common\Unsafe.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="Delegations\Delegates.cs" />
