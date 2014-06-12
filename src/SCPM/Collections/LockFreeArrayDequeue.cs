@@ -1,4 +1,4 @@
-﻿#region Licence
+#region Licence
 /*
 Copyright (c) 2011-2014 Contributors as noted in the AUTHORS file
 
@@ -42,10 +42,11 @@ namespace SCPM.Collections
     /// <typeparam name="T">generic Typeparam.</typeparam>
     public class LockFreeDequeue<T> : IStealingQueue<T>
     {
-        private const int len = 64;
+        private const int len = 128;
         private int mask = len - 1;
-  
-        private T[] array = new T[len];
+
+        private const int pad = 2;
+        private T[] array = new T[len << pad];
 
         private volatile int head = 0;
         private volatile int tail = 0;
@@ -64,24 +65,24 @@ namespace SCPM.Collections
 
                     if (count < mask)
                     {
-                        array[tail++ & mask] = value;
+                        array[(tail++ & mask) << pad] = value;
                         Interlocked.Exchange(ref tailLocker, 0);
                         return;
                     }
                     else
                     {
                         //Double the size.
-                        T[] newArr = new T[array.Length << 1];
+                        T[] newArr = new T[(array.Length << 1) << pad];
 
                         for (int i = 0; i < count; i++)
-                            newArr[i] = array[(i + head) & mask];
+                            newArr[i << pad] = array[((i + head) & mask) << pad];
 
                         array = newArr;
                         head = 0;
                         tail = count;
                         mask = (mask << 1) | 1;
 
-                        array[tail++ & mask] = value;
+                        array[(tail++ & mask) << pad] = value;
                         Interlocked.Exchange(ref tailLocker, 0);
                         return;
                     }
@@ -96,7 +97,7 @@ namespace SCPM.Collections
                 int local = headLocker;
                 if (Interlocked.CompareExchange(ref headLocker, 1, local) == 0)
                 {
-                    T value = array[head++ & mask];
+                    T value = array[(head++ & mask) << pad];
                     Interlocked.Exchange(ref headLocker, 0);
                     return value;
                 }
@@ -110,7 +111,7 @@ namespace SCPM.Collections
                 int local = tailLocker;
                 if (Interlocked.CompareExchange(ref tailLocker, 1, local) == 0)
                 {
-                    T value = array[--tail & mask];
+                    T value = array[(--tail & mask) << pad];
                     Interlocked.Exchange(ref tailLocker, 0);
                     return value;
                 }
@@ -120,7 +121,7 @@ namespace SCPM.Collections
 
                     if (Interlocked.CompareExchange(ref headLocker, 1, local) == 0)
                     {
-                        T value = array[head++ & mask];
+                        T value = array[(head++ & mask) << pad];
                         Interlocked.Exchange(ref headLocker, 0);
                         return value;
                     }
