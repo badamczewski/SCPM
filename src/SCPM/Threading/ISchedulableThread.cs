@@ -40,5 +40,6 @@ namespace SCPM.Threading
         bool IsStarted { get; }
         int ThreadId { get; }
         int SchedulableIndex { get; set; }
+        int Count { get; }
     }
 }

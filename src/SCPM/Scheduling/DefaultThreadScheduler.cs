@@ -36,15 +36,15 @@ namespace SCPM.Scheduling
 {
     public sealed class DefaultThreadScheduler : IThreadScheduler
     {
-        private const string name = "DefaultScheduler"; 
+        private const string name = "DefaultScheduler";
         private List<ISchedulableThread> threadScheduler;
         private readonly object locker = new object();
         private int isBuilding = False;
         private const int False = 0;
         private const int True = 0;
 
-        static DefaultThreadScheduler() {}
-        private DefaultThreadScheduler() {}
+        static DefaultThreadScheduler() { }
+        private DefaultThreadScheduler() { }
 
         public static DefaultThreadScheduler Create()
         {
@@ -64,7 +64,7 @@ namespace SCPM.Scheduling
         }
 
         public void Remove(ISchedulableThread thread)
-        { 
+        {
             threadScheduler.Remove(thread);
         }
 
@@ -77,6 +77,7 @@ namespace SCPM.Scheduling
                 threadScheduler.Add(threads[i]);
                 threadScheduler[i].SchedulableIndex = i;
             }
+
             ThreadCount = threadScheduler.Count;
             IsCreated = true;
         }
@@ -96,7 +97,7 @@ namespace SCPM.Scheduling
                 //is not thread safe atm, in the future TODO: this will change
                 //as we will move to other DS or use fine grained locks.
                 int local = isBuilding;
-                if(Interlocked.CompareExchange(ref isBuilding, 1, local) == 0)
+                if (Interlocked.CompareExchange(ref isBuilding, 1, local) == 0)
                 {
                     isBuilding = True;
                     var copy = threadScheduler[owner.SchedulableIndex];
@@ -104,12 +105,15 @@ namespace SCPM.Scheduling
                     if (action == SchedulerAction.Enqueue || action == SchedulerAction.Steal)
                     {
                         var indexPlus = owner.SchedulableIndex + 1;
+
                         while (threadScheduler.Count - 1 != owner.SchedulableIndex)
                         {
-                            if (copy.CompareTo(threadScheduler[indexPlus]) > 0)
+                            var plusThread = threadScheduler[indexPlus];
+
+                            if (copy.CompareTo(plusThread) > 0)
                             {
-                                threadScheduler[owner.SchedulableIndex] = threadScheduler[indexPlus];
-                                threadScheduler[owner.SchedulableIndex].SchedulableIndex--;
+                                plusThread.SchedulableIndex--;
+                                threadScheduler[owner.SchedulableIndex] = plusThread;
                                 threadScheduler[indexPlus] = copy;
                                 owner.SchedulableIndex++;
                                 indexPlus = owner.SchedulableIndex + 1;
@@ -121,12 +125,15 @@ namespace SCPM.Scheduling
                     else if (action == SchedulerAction.Dequeue)
                     {
                         var indexMinus = owner.SchedulableIndex - 1;
+
                         while (owner.SchedulableIndex != 0)
                         {
-                            if (copy.CompareTo(threadScheduler[indexMinus]) < 0)
+                            var minusThread = threadScheduler[indexMinus];
+
+                            if (copy.CompareTo(minusThread) < 0)
                             {
-                                threadScheduler[owner.SchedulableIndex] = threadScheduler[indexMinus];
-                                threadScheduler[owner.SchedulableIndex].SchedulableIndex++;
+                                minusThread.SchedulableIndex++;
+                                threadScheduler[owner.SchedulableIndex] = minusThread;
                                 threadScheduler[indexMinus] = copy;
                                 owner.SchedulableIndex--;
                                 indexMinus = owner.SchedulableIndex - 1;
@@ -137,7 +144,7 @@ namespace SCPM.Scheduling
                     }
 
                     isBuilding = False;
-                }      
+                }
             }
         }
 

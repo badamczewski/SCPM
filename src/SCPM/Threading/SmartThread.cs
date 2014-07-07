@@ -180,7 +180,7 @@ namespace SCPM.Threading
         private void Process()
         {
             IComputation localComputation = null;
-
+            Thread.BeginThreadAffinity();
             if (cpuId != -1)
             {
                 Unsafe.SetThreadAffinityMask(Unsafe.GetCurrentThread(), new IntPtr(1 << (int)cpuId));
@@ -224,6 +224,7 @@ namespace SCPM.Threading
             //end processing.
             IsStarted = false;
             wait.Close();
+            Thread.EndThreadAffinity();
         }
 
         /// <summary>
@@ -404,5 +405,9 @@ namespace SCPM.Threading
             return this.scheduler.UnsafeCount - ((SmartThread)other).scheduler.UnsafeCount;
         }
 
+        public int Count
+        {
+            get { return this.scheduler.UnsafeCount; }
+        }
     }
 }
