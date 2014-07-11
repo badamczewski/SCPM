@@ -48,7 +48,7 @@ namespace SCPM.Threading
         /// <summary>
         /// Heap that represents a priority queue of worker threads that werent created in the pool.
         /// </summary>
-        private static readonly IThreadScheduler artificialThreadScheduler = null;
+        private static readonly IExpandableThreadScheduler artificialThreadScheduler = null;
 
         /// <summary>
         /// A default static constructor that initializes the pool threads.
@@ -125,7 +125,7 @@ namespace SCPM.Threading
             if (threadPoolThread)
                 return threadScheduler.GetWorstThread();
 
-            return artificialThreadScheduler.GetWorstThread(); ;
+            return artificialThreadScheduler.GetWorstThread();
         }
 
         /// <summary>

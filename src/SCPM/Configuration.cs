@@ -50,9 +50,9 @@ namespace SCPM
         public static int FiberThreadWaitSpinLimit = 20;
         public static int FiberThreadWaitSpinTime = 30;
 
-        public static IThreadScheduler SmartPoolScheduler = DefaultThreadScheduler.Create();
-        public static IThreadScheduler FiberPoolScheduler = DefaultThreadScheduler.Create();
-        public static IThreadScheduler ArtificialThreadScheduler = HeapThreadScheduler.Create();
+        public static IThreadScheduler SmartPoolScheduler = SequentialSeekThreadScheduler.Create();
+        public static IThreadScheduler FiberPoolScheduler = SequentialSeekThreadScheduler.Create();
+        public static IExpandableThreadScheduler ArtificialThreadScheduler = HeapThreadScheduler.Create();
 
         public static bool SmartThreadPoolPreLoadThreads = true;
     }

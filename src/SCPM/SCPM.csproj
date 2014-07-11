@@ -73,12 +73,14 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Scheduling\DefaultThreadScheduler.cs" />
+    <Compile Include="Scheduling\PartialSortingThreadScheduler.cs" />
     <Compile Include="Scheduling\DefaultWorkScheduler.cs" />
     <Compile Include="Scheduling\HeapThreadScheduler.cs" />
+    <Compile Include="Scheduling\IExpandableThreadScheduler.cs" />
     <Compile Include="Scheduling\IThreadScheduler.cs" />
     <Compile Include="Scheduling\IWorkScheduler.cs" />
     <Compile Include="Scheduling\SchedulerAction.cs" />
+    <Compile Include="Scheduling\SequentialSeekThreadScheduler.cs" />
     <Compile Include="Threading\Computation.cs" />
     <Compile Include="Threading\ComputationExecutionType.cs" />
     <Compile Include="Threading\GenericComputation.cs" />

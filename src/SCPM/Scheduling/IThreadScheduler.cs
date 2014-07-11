@@ -47,9 +47,6 @@ namespace SCPM.Interfaces
         ISchedulableThread GetScheduledThread();
         ISchedulableThread GetWorstThread();
 
-        void Add(ISchedulableThread thread);
-        void Remove(ISchedulableThread thread);
-
         int ThreadCount { get; set; }
         bool IsCreated { get; set; }
         string Name { get; }

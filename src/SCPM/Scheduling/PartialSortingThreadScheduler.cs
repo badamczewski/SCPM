@@ -23,7 +23,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
 
-
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -34,51 +33,39 @@ using System.Threading;
 
 namespace SCPM.Scheduling
 {
-    public sealed class DefaultThreadScheduler : IThreadScheduler
+    /// <summary>
+    /// Represents a partial sorting scheduller that tries to move threads around
+    /// by determining the position of the curently rescheduled thread. 
+    /// 
+    /// This scheduler is very efective when very uniform workloads are needed,
+    /// with some deviation from the ideal solution and scheduling speed needs to be fast.
+    /// (the owner lock the rescheduling process and other threads skip the routine)
+    /// </summary>
+    public sealed class PartialSortingThreadScheduler : IThreadScheduler
     {
         private const string name = "DefaultScheduler";
-        private List<ISchedulableThread> threadScheduler;
-        private readonly object locker = new object();
+        private ISchedulableThread[] threadScheduler;
         private int isBuilding = False;
         private const int False = 0;
-        private const int True = 1;
+        private const int True = 0;
 
-        static DefaultThreadScheduler() { }
-        private DefaultThreadScheduler() { }
+        static PartialSortingThreadScheduler() { }
+        private PartialSortingThreadScheduler() { }
 
-        public static DefaultThreadScheduler Create()
+        public static PartialSortingThreadScheduler Create()
         {
-            return new DefaultThreadScheduler();
+            return new PartialSortingThreadScheduler();
         }
 
         public bool IsCreated { get; set; }
         public string Name { get { return name; } }
         public int ThreadCount { get; set; }
 
-        public void Add(ISchedulableThread thread)
-        {
-            lock (locker)
-            {
-                threadScheduler.Add(thread);
-            }
-        }
-
-        public void Remove(ISchedulableThread thread)
-        {
-            threadScheduler.Remove(thread);
-        }
-
         public void Create(ISchedulableThread[] threads)
         {
-            threadScheduler = new List<ISchedulableThread>();
+            threadScheduler = threads;
 
-            for (int i = 0; i < threads.Length; i++)
-            {
-                threadScheduler.Add(threads[i]);
-                threadScheduler[i].SchedulableIndex = i;
-            }
-
-            ThreadCount = threadScheduler.Count;
+            ThreadCount = threadScheduler.Length;
             IsCreated = true;
         }
 
@@ -105,7 +92,7 @@ namespace SCPM.Scheduling
                     {
                         var indexPlus = owner.SchedulableIndex + 1;
 
-                        while (threadScheduler.Count - 1 != owner.SchedulableIndex)
+                        while (threadScheduler.Length - 1 != owner.SchedulableIndex)
                         {
                             var plusThread = threadScheduler[indexPlus];
 
@@ -154,7 +141,7 @@ namespace SCPM.Scheduling
 
         public ISchedulableThread GetWorstThread()
         {
-            return threadScheduler[threadScheduler.Count - 1];
+            return threadScheduler[threadScheduler.Length - 1];
         }
     }
 }

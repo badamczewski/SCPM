@@ -35,7 +35,14 @@ using SCPM.Interfaces;
 
 namespace SCPM.Scheduling
 {
-    public class HeapThreadScheduler : IThreadScheduler
+    /// <summary>
+    /// Represents a heap based scheduller that guarantes that the best possible
+    /// thread to schedule on will be found. 
+    /// 
+    /// This scheduler is very efective when very uniform workloads are needed.
+    /// (the owner lock the rescheduling process and other threads skip the routine)
+    /// </summary>
+    public class HeapThreadScheduler : IExpandableThreadScheduler
     {
         private const string name = "HeapThreadScheduler";
         private Heap threadScheduler;
