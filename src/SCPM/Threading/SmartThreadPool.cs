@@ -69,6 +69,9 @@ namespace SCPM.Threading
             {
                 threads[i] = new SmartThread(true, -1);
                 threads[i].SchedulableIndex = i;
+
+                if (Configuration.SmartThreadPoolPreLoadThreads)
+                    threads[i].Start();
             }
 
             //Load the default thread scheduler.

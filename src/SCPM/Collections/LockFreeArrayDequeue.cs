@@ -50,22 +50,21 @@ namespace SCPM.Collections
         private volatile int head = 0;
         private volatile int tail = 0;
 
-        private int tailLocker = 0;
         private int headLocker = 0;
 
         public void Enqueue(T value)
         {
             while (true)
             {
-                int local = tailLocker;
-                if (Interlocked.CompareExchange(ref tailLocker, 1, local) == 0)
+                int local = headLocker;
+                if (Interlocked.CompareExchange(ref headLocker, 1, local) == 0)
                 {
                     int count = tail - head;
 
                     if (count < mask)
                     {
                         array[(tail++ & mask) ] = value;
-                        Interlocked.Exchange(ref tailLocker, 0);
+                        headLocker = 0;
                         return;
                     }
                     else
@@ -74,7 +73,7 @@ namespace SCPM.Collections
                         T[] newArr = new T[(array.Length << 1) ];
 
                         for (int i = 0; i < count; i++)
-                            newArr[i ] = array[((i + head) & mask) ];
+                            newArr[i] = array[((i + head) & mask) ];
 
                         array = newArr;
                         head = 0;
@@ -82,7 +81,7 @@ namespace SCPM.Collections
                         mask = (mask << 1) | 1;
 
                         array[(tail++ & mask) ] = value;
-                        Interlocked.Exchange(ref tailLocker, 0);
+                        headLocker = 0;
                         return;
                     }
                 }
@@ -97,7 +96,7 @@ namespace SCPM.Collections
                 if (Interlocked.CompareExchange(ref headLocker, 1, local) == 0)
                 {
                     T value = array[(head++ & mask) ];
-                    Interlocked.Exchange(ref headLocker, 0);
+                    headLocker = 0;
                     return value;
                 }
             }
@@ -107,24 +106,15 @@ namespace SCPM.Collections
         {
             while (true)
             {
-                int local = tailLocker;
-                if (Interlocked.CompareExchange(ref tailLocker, 1, local) == 0)
+                int local = headLocker;
+                if (Interlocked.CompareExchange(ref headLocker, 1, local) == 0)
                 {
-                    T value = array[(--tail & mask) ];
-                    Interlocked.Exchange(ref tailLocker, 0);
+                    T value = array[(--tail & mask)];
+                    headLocker = 0;
                     return value;
                 }
-                else
-                {
-                    local = headLocker;
 
-                    if (Interlocked.CompareExchange(ref headLocker, 1, local) == 0)
-                    {
-                        T value = array[(head++ & mask) ];
-                        Interlocked.Exchange(ref headLocker, 0);
-                        return value;
-                    }
-                }
+                return default(T);
             }
         }
 

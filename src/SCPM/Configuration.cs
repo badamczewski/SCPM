@@ -45,7 +45,7 @@ namespace SCPM
         public static ThreadPriority SmartThreadDefaultPrority = ThreadPriority.Normal;
         public static int SmartThreadWaitSpinLimit = 20;
         public static int SmartThreadWaitSpinTime = 30;
-        public static int SmartThreadStealCondition = 3;
+        public static int SmartThreadStealCondition = 2;
 
         public static int FiberThreadWaitSpinLimit = 20;
         public static int FiberThreadWaitSpinTime = 30;
@@ -53,6 +53,8 @@ namespace SCPM
         public static IThreadScheduler SmartPoolScheduler = DefaultThreadScheduler.Create();
         public static IThreadScheduler FiberPoolScheduler = DefaultThreadScheduler.Create();
         public static IThreadScheduler ArtificialThreadScheduler = HeapThreadScheduler.Create();
+
+        public static bool SmartThreadPoolPreLoadThreads = true;
     }
 }
 

@@ -41,7 +41,7 @@ namespace SCPM.Scheduling
         private readonly object locker = new object();
         private int isBuilding = False;
         private const int False = 0;
-        private const int True = 0;
+        private const int True = 1;
 
         static DefaultThreadScheduler() { }
         private DefaultThreadScheduler() { }
@@ -99,7 +99,6 @@ namespace SCPM.Scheduling
                 int local = isBuilding;
                 if (Interlocked.CompareExchange(ref isBuilding, 1, local) == 0)
                 {
-                    isBuilding = True;
                     var copy = threadScheduler[owner.SchedulableIndex];
 
                     if (action == SchedulerAction.Enqueue || action == SchedulerAction.Steal)
