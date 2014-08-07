@@ -29,17 +29,18 @@ using System.Linq;
 using System.Text;
 using System.Management;
 using System.Runtime.InteropServices;
+using System.Security;
 
 namespace SCPM.Common
 {
     public class Unsafe
     {
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
         public static extern int GetCurrentProcessorNumber();
 
-        [DllImport("kernel32.dll")]
+        [DllImport("kernel32.dll"), SuppressUnmanagedCodeSecurity]
         public static extern IntPtr GetCurrentThread();
-        [DllImport("kernel32.dll")]
+        [DllImport("kernel32.dll"), SuppressUnmanagedCodeSecurity]
         public static extern IntPtr SetThreadAffinityMask(IntPtr hThread, IntPtr dwThreadAffinityMask);
 
 
